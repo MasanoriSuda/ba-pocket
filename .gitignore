@@ -1,5 +1,7 @@
 .dart_tool/
+.dart-tool/
 build/
+.flutter/
 .idea/
 *.iml
 .flutter-plugins
@@ -14,6 +16,12 @@ build/
 ios/Pods/
 ios/Flutter/Generated.xcconfig
 ios/Flutter/flutter_export_environment.sh
+
+# macOS
+.DS_Store
+
+# Local config
+.config/
 
 # Android
 android/.gradle/
