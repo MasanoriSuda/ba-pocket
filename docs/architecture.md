@@ -7,7 +7,7 @@
 - UI: Flutter
 - 言語: Dart
 - 状態管理: 最小構成（StatefulWidget/ChangeNotifier等）
-- データ保存: SQLite / Hive / SharedPreferences のいずれか
+- データ保存: Hive（EventLog含む端末内保存）
 - 依存管理: pub (Flutter/Dart)
 - テスト: flutter_test（可能な範囲）
 
@@ -28,6 +28,7 @@ flowchart LR
 - 端末内保存のみ
 - 個人情報は保存しない
 - 削除はユーザー操作で行える
+- EventLogはHiveに保存し、KPIは端末内で集計する
 
 ## 6. 技術的制約と要件
 - ネットワーク通信を前提としない

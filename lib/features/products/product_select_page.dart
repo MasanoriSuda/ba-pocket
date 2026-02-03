@@ -10,9 +10,11 @@ class ProductSelectPage extends StatefulWidget {
   const ProductSelectPage({
     super.key,
     required this.input,
+    required this.consultationId,
   });
 
   final ConsultationInput input;
+  final String consultationId;
 
   @override
   State<ProductSelectPage> createState() => _ProductSelectPageState();
@@ -92,6 +94,7 @@ class _ProductSelectPageState extends State<ProductSelectPage> {
                               builder: (context) => ResultPage(
                                 input: widget.input,
                                 selectedProducts: selected,
+                                consultationId: widget.consultationId,
                               ),
                             ),
                           );

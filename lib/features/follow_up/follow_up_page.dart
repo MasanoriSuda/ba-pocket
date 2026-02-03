@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../../data/event_logger.dart';
+
 class FollowUpPage extends StatefulWidget {
-  const FollowUpPage({super.key});
+  const FollowUpPage({
+    super.key,
+    required this.consultationId,
+  });
+
+  final String consultationId;
 
   @override
   State<FollowUpPage> createState() => _FollowUpPageState();
@@ -9,7 +16,15 @@ class FollowUpPage extends StatefulWidget {
 
 class _FollowUpPageState extends State<FollowUpPage> {
   String? _outcome;
+  int? _anxietyScore;
+  int? _referralIntent;
   final TextEditingController _memoController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    EventLogger.logFollowupOpened(consultationId: widget.consultationId);
+  }
 
   @override
   void dispose() {
@@ -24,10 +39,31 @@ class _FollowUpPageState extends State<FollowUpPage> {
       );
       return;
     }
+    final mapped = _mapOutcome(_outcome!);
+    EventLogger.logFollowupSubmitted(
+      consultationId: widget.consultationId,
+      result: mapped,
+      notesLength: _memoController.text.trim().length,
+      anxietyScore: _anxietyScore,
+      referralIntent: _referralIntent,
+    );
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('記録しました（PoCは端末内のみ）。')),
     );
     Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  String _mapOutcome(String value) {
+    switch (value) {
+      case '良くなった':
+        return 'improved';
+      case '変わらない':
+        return 'same';
+      case '悪化した':
+        return 'worse';
+      default:
+        return 'unknown';
+    }
   }
 
   @override
@@ -63,6 +99,38 @@ class _FollowUpPageState extends State<FollowUpPage> {
               groupValue: _outcome,
               onChanged: (value) => setState(() => _outcome = value),
               title: const Text('悪化した'),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<int>(
+              value: _anxietyScore,
+              items: List.generate(
+                5,
+                (index) => DropdownMenuItem(
+                  value: index + 1,
+                  child: Text('${index + 1}'),
+                ),
+              ),
+              onChanged: (value) => setState(() => _anxietyScore = value),
+              decoration: const InputDecoration(
+                labelText: '不安は減りましたか（1〜5）',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<int>(
+              value: _referralIntent,
+              items: List.generate(
+                11,
+                (index) => DropdownMenuItem(
+                  value: index,
+                  child: Text('$index'),
+                ),
+              ),
+              onChanged: (value) => setState(() => _referralIntent = value),
+              decoration: const InputDecoration(
+                labelText: '紹介意向（0〜10）',
+                border: OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 12),
             TextField(

@@ -10,6 +10,7 @@ PoCとして「肌荒れが気になる夜に、家にあるものだけで最�
 - 今夜の指示（使う/休む/手順/様子見ルール）
 - 翌日フォロー（3択＋任意メモ）
 - 医療行為ではない注意事項と受診誘導
+- KPI一覧（端末内の簡易集計）
 
 ### 対象外
 - 成分解析・相性チェック
@@ -39,6 +40,10 @@ PoCとして「肌荒れが気になる夜に、家にあるものだけで最�
 - 医療行為ではない旨の明記
 - 危険サイン（強い痛み/広範な腫れ/発熱/化膿等）は受診誘導
 
+### 3.6 KPI一覧（PoC運用）
+- EventLogを端末内で集計し、KPI一覧を最小構成で表示
+- 直近14日をデフォルト期間とする
+
 ## 4. システム構成図
 PoCはiOS端末内のみで完結する。
 
@@ -47,6 +52,8 @@ flowchart LR
   UI[UI Layer] --> Logic[Decision Engine]
   Logic --> Store[Local Storage]
   Store --> UI
+  UI --> Analytics[KPI Aggregator]
+  Analytics --> Store
 ```
 
 ## 5. データモデル定義（ER図）
@@ -97,6 +104,15 @@ erDiagram
     string memo
     datetime createdAt
   }
+  EVENT_LOG {
+    string id
+    string userId
+    string sessionId
+    string consultationId
+    string eventType
+    datetime timestamp
+    string payload
+  }
 
   CONSULTATION ||--o{ SYMPTOM : has
   CONSULTATION ||--|| RECOMMENDATION : produces
@@ -113,12 +129,14 @@ erDiagram
   - 提案結果
   - 翌日フォロー
   - 注意事項
+  - KPI一覧（PoC運用）
 - Decision Engine
   - ルール判定（症状×強度）
   - 手持ち選定ロジック（最大2〜3件）
   - 出力テンプレート整形
 - Local Storage
   - Product/Consultation/Recommendation/FollowUpの保存
+  - EventLogの保存
 
 ## 7. ユースケース
 ```mermaid
@@ -128,11 +146,13 @@ flowchart TD
   Use2[手持ちを登録する]
   Use3[今夜の指示を見る]
   Use4[翌日の結果を記録する]
+  Use5[KPI一覧を確認する]
 
   User --> Use2
   User --> Use1
   User --> Use3
   User --> Use4
+  User --> Use5
 ```
 
 ## 8. 画面遷移図
@@ -140,6 +160,7 @@ flowchart TD
 flowchart LR
   Home[ホーム] --> Checklist[問診]
   Home --> Products[手持ち一覧]
+  Home --> Kpi[KPI一覧]
   Checklist --> Select[手持ち選択]
   Select --> Result[提案結果]
   Result --> Follow[翌日フォロー]
@@ -188,6 +209,19 @@ flowchart LR
 --------------------------------
 ```
 
+### KPI一覧（PoC運用）
+```
+--------------------------------
+  KPI一覧（直近14日）
+  問診完了率 62%（31/50）
+  提案到達率 80%（40/50）
+  提案実行率 52%（26/50）
+  2回目利用率 30%（6/20）
+  不安低減 4.1 / 5
+  紹介意向 7.2 / 10
+--------------------------------
+```
+
 ## 10. API設計（PoC）
 外部APIは使用しない。端末内のサービスインターフェースのみ定義する。
 
@@ -196,6 +230,8 @@ flowchart LR
 - `startConsultation(symptoms[], intensity) -> Consultation`
 - `generateRecommendation(consultationId, productIds[]) -> Recommendation`
 - `saveFollowUp(consultationId, outcome, memo) -> FollowUp`
+- `logEvent(event) -> void`
+- `getKpiSummary(period) -> KpiSummary`
 
 ## 11. ルール設計の方針（PoC）
 - 症状×強度に応じて「方針タグ」を付与

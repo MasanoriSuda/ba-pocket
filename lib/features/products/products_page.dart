@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../data/event_logger.dart';
 import '../../data/in_memory_store.dart';
 import '../../domain/product.dart';
 
@@ -31,6 +32,13 @@ class _ProductsPageState extends State<ProductsPage> {
     final id = DateTime.now().microsecondsSinceEpoch.toString();
     InMemoryStore.addProduct(
       Product(id: id, name: name, category: _selectedCategory),
+    );
+    final categories = InMemoryStore.products.value
+        .map((product) => product.category)
+        .toList();
+    EventLogger.logProductsRegistered(
+      count: InMemoryStore.products.value.length,
+      categoriesSummary: EventLogger.buildCategorySummary(categories),
     );
     _nameController.clear();
     FocusScope.of(context).unfocus();

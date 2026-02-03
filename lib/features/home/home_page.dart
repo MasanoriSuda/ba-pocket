@@ -1,10 +1,23 @@
 import 'package:flutter/material.dart';
 
+import '../../data/event_logger.dart';
 import '../consultation/consultation_page.dart';
+import '../kpi/kpi_dashboard_page.dart';
 import '../products/products_page.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    EventLogger.logAppOpened();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +59,17 @@ class HomePage extends StatelessWidget {
                 );
               },
               child: const Text('手持ちを管理'),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const KpiDashboardPage(),
+                  ),
+                );
+              },
+              child: const Text('KPI一覧を見る'),
             ),
           ],
         ),

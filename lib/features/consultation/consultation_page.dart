@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../data/analytics_context.dart';
+import '../../data/event_logger.dart';
 import '../../domain/consultation_input.dart';
 import '../products/product_select_page.dart';
 
@@ -11,6 +13,10 @@ class ConsultationPage extends StatefulWidget {
 }
 
 class _ConsultationPageState extends State<ConsultationPage> {
+  late final String _consultationId;
+  late final DateTime _startedAt;
+  bool _completed = false;
+
   final Map<String, bool> _symptoms = {
     '赤み': false,
     'ヒリつき': false,
@@ -22,6 +28,27 @@ class _ConsultationPageState extends State<ConsultationPage> {
   String _intensity = '中';
 
   bool get _canProceed => _symptoms.values.any((value) => value);
+
+  @override
+  void initState() {
+    super.initState();
+    _consultationId = AnalyticsContext.newConsultationId();
+    _startedAt = DateTime.now();
+    EventLogger.logConsultationStarted(consultationId: _consultationId);
+  }
+
+  @override
+  void dispose() {
+    if (!_completed) {
+      final elapsedMs = DateTime.now().difference(_startedAt).inMilliseconds;
+      EventLogger.logConsultationAbandoned(
+        consultationId: _consultationId,
+        stepIndex: 1,
+        elapsedMs: elapsedMs,
+      );
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,6 +125,10 @@ class _ConsultationPageState extends State<ConsultationPage> {
             FilledButton(
               onPressed: _canProceed
                   ? () {
+                      _completed = true;
+                      EventLogger.logConsultationCompleted(
+                        consultationId: _consultationId,
+                      );
                       final selectedSymptoms = _symptoms.entries
                           .where((entry) => entry.value)
                           .map((entry) => entry.key)
@@ -110,6 +141,7 @@ class _ConsultationPageState extends State<ConsultationPage> {
                         MaterialPageRoute(
                           builder: (context) => ProductSelectPage(
                             input: input,
+                            consultationId: _consultationId,
                           ),
                         ),
                       );
